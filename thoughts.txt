@@ -1,0 +1,95 @@
+overseer /usr/share/overseer.example
+ -> run server from config
+
+cp /usr/share/overseer.example /etc/overseer
+overseer -d start
+overseer -d stop
+ -> run server from default config location
+    in daemon mode
+
+go to 
+http://localhost:9369
+or
+http://username.overseer.com/
+
+To add a server to the fleet
+ - type: existing server...
+         virtual server on...
+ - needs root password
+ - creates an account called "overseer"
+   by default that can sudo to specific
+   other users (e.g. tomcat, mysql)
+ - sets up public key login from
+   the user overseer is running as to
+   that account
+ - number of bundles, for each bundle
+   can also add tags.
+
+e.g. BUNDLES:
+ "api" => install java, tomca
+       => config files
+       => keep-up tomcat
+ "database" => tag[master]
+ "meta" => install java, tomcat,
+           jenkins, solr, mysql, ...
+ - bundles take configuration from the site environment,
+   no config in a specific bundle 
+
+Each server runs one or more bundles:
+ - specifies services + configs
+ - each bundle knows how to install
+   and uninstall. can do things e.g.
+   if yum is installed, install packages
+   with yum, if apt is installed...
+ - If you edit a config/service startup
+   that overseer is managing, it will detect
+   it and allow you to update the
+ - bundles should have a way of scaling out,
+   e.g. auto-adding redis "slaveof" things.
+   do this with "tags" that modify the setup
+  - 
+
+the overseer server itself does more...
+ - pushes custom-generated config files
+   to bundles. e.g. maintain list of api
+   server addresses on the build server,
+   set up pub-key auth from build server
+   to each api server
+ - maybe it can be a DNS server as well
+ - do load balancing?
+ 
+OVERSEER WEBAPP:
+ - no username, password is the password of the user
+   that overseer is running as
+ - monitoring
+ - servers
+ - bundles
+ - site environment
+ - cron tasks
+   - specialized: constraints.
+     e.g. wc -l #{REPORTING}(/opt/jakarta-tomcat/logs/tracking-.+[.]log) == sum(#{API}\0) if \0 is not open by any processes
+
+Bundles contain deployments, deployments are apps with a configuration
+ - Configurations are a set of rules for generating config files
+   - config files are created with paths/content generated from variables
+     and static text
+   - variables are either inputs or generated from other variables
+     e.g. $n = default 1 (be can overriden) 
+          $api_url = "api-$n.lyricfind.com"
+          /etc/proxy = """
+             ping $api_url
+          """                    
+          /etc/defaults-$n/test = """
+             Some static text.
+          """
+   - can also reference site variables
+   - can also include other configurations
+     (and override their default variables)
+
+   overseer/apps/
+
+   overseer/configurations/tomcat_api_service:
+   
+   @include "tomcat"
+   
+
